@@ -1,0 +1,5 @@
+SpeechRecognition
+PyAudio==0.2.14
+transformers==4.38.2
+torch
+pyttsx3==2.90
