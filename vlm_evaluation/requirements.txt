@@ -1,0 +1,7 @@
+transformers>=4.38.2
+torch
+peft
+bitsandbytes
+Pillow
+accelerate
+datasets
