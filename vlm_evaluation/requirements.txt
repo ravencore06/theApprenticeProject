@@ -5,3 +5,5 @@ bitsandbytes
 Pillow
 accelerate
 datasets
+lm-format-enforcer
+pydantic

@@ -4,6 +4,9 @@ import os
 import re
 import torch
 from tqdm import tqdm
+from pydantic import BaseModel
+from lmformatenforcer import JsonSchemaParser
+from lmformatenforcer.integrations.transformers import build_transformers_prefix_allowed_tokens_fn
 from transformers import (
     LlavaForConditionalGeneration,
     AutoProcessor,
@@ -11,6 +14,13 @@ from transformers import (
 )
 from dataset import ArtifactDataset
 from prompts import SYSTEM_PROMPT, generate_evaluation_prompt
+
+
+class EvaluationOutput(BaseModel):
+    skill: str
+    dimension: str
+    score: int
+    max: int
 
 
 def parse_args():
@@ -48,11 +58,13 @@ def load_model(model_name, quantize=True):
 
 
 def extract_score(text):
-    match = re.search(r"SCORE:\s*(\d+)", text, re.IGNORECASE)
-    if match:
-        score = int(match.group(1))
-        if 1 <= score <= 5:
-            return score
+    try:
+        data = json.loads(text)
+        return data.get("score")
+    except json.JSONDecodeError:
+        match = re.search(r'"score"\s*:\s*(\d+)', text, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
     return None
 
 
@@ -105,26 +117,31 @@ def main():
         prompt_text = generate_evaluation_prompt(
             student_id=meta.get("student_id", "unknown"),
             artifact_type=meta.get("artifact_type", "unknown"),
-            rubric=meta.get("rubric", ""),
+            rubric=meta.get("rubric", {}),
         )
 
         inputs = processor(text=prompt_text, images=image, return_tensors="pt").to(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
 
+        try:
+            schema = EvaluationOutput.model_json_schema()
+        except AttributeError:
+            schema = EvaluationOutput.schema()
+            
+        parser = JsonSchemaParser(schema)
+        prefix_function = build_transformers_prefix_allowed_tokens_fn(processor.tokenizer, parser)
+
         with torch.no_grad():
             output_ids = model.generate(
                 **inputs,
                 max_new_tokens=args.max_new_tokens,
                 do_sample=False,
+                prefix_allowed_tokens_fn=prefix_function,
             )
 
-        decoded = processor.decode(output_ids[0], skip_special_tokens=True)
-        response = (
-            decoded.split("ASSISTANT:")[-1].strip()
-            if "ASSISTANT:" in decoded
-            else decoded.strip()
-        )
+        decoded = processor.decode(output_ids[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+        response = decoded.strip()
 
         predicted_score = extract_score(response)
         ground_truth = meta.get("ground_truth_score")

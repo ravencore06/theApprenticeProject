@@ -3,21 +3,36 @@
     "image_path": "sample_data\\sample_origami.jpg",
     "student_id": "S001",
     "artifact_type": "Origami",
-    "rubric": "1: No recognizable shape, 5: Perfect folds with clean edges and symmetry",
+    "rubric": {
+      "skill": "creativity",
+      "dimension": "originality",
+      "max": 5,
+      "criteria": "1: No recognizable shape, 5: Perfect folds with clean edges and symmetry"
+    },
     "ground_truth_score": 4
   },
   {
     "image_path": "sample_data\\sample_drawing.jpg",
     "student_id": "S002",
     "artifact_type": "Drawing",
-    "rubric": "1: No effort, 5: Detailed and creative composition",
+    "rubric": {
+      "skill": "creativity",
+      "dimension": "composition",
+      "max": 5,
+      "criteria": "1: No effort, 5: Detailed and creative composition"
+    },
     "ground_truth_score": 3
   },
   {
     "image_path": "sample_data\\sample_model.jpg",
     "student_id": "S003",
     "artifact_type": "Clay Model",
-    "rubric": "1: Unrecognizable, 5: Realistic and well-finished model",
+    "rubric": {
+      "skill": "problem_solving",
+      "dimension": "execution",
+      "max": 5,
+      "criteria": "1: Unrecognizable, 5: Realistic and well-finished model"
+    },
     "ground_truth_score": 5
   }
 ]
