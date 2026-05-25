@@ -59,12 +59,13 @@ def load_model(model_name, quantize=True):
 
 def extract_score(text):
     try:
-        data = json.loads(text)
-        return data.get("score")
+        # Parse the JSON directly instead of using Regex
+        parsed = json.loads(text)
+        score = parsed.get("score")
+        if isinstance(score, int) and 1 <= score <= 5:
+            return score
     except json.JSONDecodeError:
-        match = re.search(r'"score"\s*:\s*(\d+)', text, re.IGNORECASE)
-        if match:
-            return int(match.group(1))
+        pass
     return None
 
 
