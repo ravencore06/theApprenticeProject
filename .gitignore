@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+vlm_env/
+.ruff_cache/
+.vscode/
+results.json
